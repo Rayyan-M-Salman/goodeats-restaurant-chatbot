@@ -6,8 +6,8 @@ Python Libraries: json, flask, requests, pathlib.
 AI model: Qwen2.5:7b , ollama
 
 # Usage:
--Run: 'restaurant-chatbot.py' and go to 'http://127.0.0.1:5000'
--Ask the chatbot any question about the restaurant.
+Run: 'restaurant-chatbot.py' and go to 'http://127.0.0.1:5000'
+Ask the chatbot any question about the restaurant.
 
 # Config
 You can edit the 'restaurant_data.json' file to change information about the restaurant.
