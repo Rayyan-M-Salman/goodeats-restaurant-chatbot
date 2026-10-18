@@ -1,0 +1,117 @@
+{
+  "restaurant": {
+    "name": "Good Eats",
+    "description": "A casual restaurant serving fresh meals and fast food",
+    "address": "Rafidya, Nablus",
+    "phone": "+972-59-252-9840",
+    "currency": "ILS",
+    "opening_hours": {
+      "monday": "10:00-22:00",
+      "tuesday": "10:00-22:00",
+      "wednesday": "10:00-22:00",
+      "thursday": "10:00-23:00",
+      "friday": "13:30-23:00",
+      "saturday": "10:00-23:00",
+      "sunday": "10:00-22:00"
+    }
+  },
+  "menu": [
+    {
+      "id": 1,
+      "name": "Classic Burger",
+      "category": "Main Course",
+      "price": 34.00,
+      "description": "Beef patty with lettuce, tomato, cheese, and sauce.",
+      "ingredients": [
+        "beef",
+        "lettuce",
+        "tomato",
+        "cheese",
+        "bread",
+        "Good Eats Sauce"
+      ],
+      "dietary_tags": [],
+      "allergens": ["milk", "gluten"],
+      "available": true
+    },
+    {
+      "id": 2,
+      "name": "Margherita Pizza Small",
+      "category": "Pizza",
+      "price": 24.00,
+      "description": "Pizza with tomato sauce, mozzarella and basil. 16cm.",
+      "ingredients": [
+        "tomato",
+        "mozzarella",
+        "basil",
+        "wheat dough"
+      ],
+      "dietary_tags": ["vegetarian"],
+      "allergens": ["milk", "gluten"],
+      "available": true
+    },
+    {
+      "id": 3,
+      "name": "Garden Salad",
+      "category": "Salads",
+      "price": 12.00,
+      "description": "Fresh mixed greens and vegetables.",
+      "ingredients": ["lettuce", "tomato", "cucumber"],
+      "dietary_tags": ["vegan", "vegetarian"],
+      "allergens": [],
+      "available": true
+    },
+    {
+      "id": 4,
+      "name": "French Fries",
+      "category": "Sides",
+      "price": 6.00,
+      "description": "Crispy potato fries.",
+      "ingredients": ["potato", "oil", "salt"],
+      "dietary_tags": ["vegan", "vegetarian"],
+      "allergens": [],
+      "available": true
+    },
+    {
+      "id": 5,
+      "name": "Pasta Alfredo",
+      "category": "Main Course",
+      "price": 34.00,
+      "description": "Pasta in a creamy Alfredo sauce with chicken",
+      "ingredients": ["pasta", "cream", "cheese", "chicken"],
+      "dietary_tags": [],
+      "allergens": ["gluten", "milk"],
+      "available": true
+    },
+    {
+      "id": 6,
+      "name": "Chicken Shawarma",
+      "category": "Main Course",
+      "price": 24.00,
+      "description": "Arabic style chicken Shawarma",
+      "ingredients": ["chicken", "tortilla", "pickles", "garlic Sauce"],
+      "dietary_tags": [],
+      "allergens": ["gluten", "milk"],
+      "available": true
+    }    
+  ],
+  "faqs": [
+    {
+      "question": "Do you offer takeaway?",
+      "answer": "Yes, takeaway is available."
+    },
+    {
+      "question": "Do you accept reservations?",
+      "answer": "Please contact us by phone to ask about reservations."
+    },
+    {
+      "question": "Do you offer delivery?",
+      "answer": "Yes, contact us by phone or use the local delivery app."
+    }
+  ],
+  "policies": {
+    "payment_methods": ["cash", "credit card"],
+    "reservations": "Contact the restaurant by phone.",
+    "pets": "No pets allowed"
+  }
+}
