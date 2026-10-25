@@ -1,5 +1,9 @@
 
 import json
+import os
+import threading
+import time
+from collections import defaultdict, deque
 from pathlib import Path
 
 import requests
@@ -13,6 +17,50 @@ DATA_FILE = BASE_DIR / "restaurant_data.json"
 
 OLLAMA_URL = "http://127.0.0.1:11434/api/chat"
 MODEL = "qwen2.5:7b"
+
+# --- DoS / load safeguards -------------------------------------------------
+
+# Set SAFEGUARDS_ENABLED=0 (env var) to temporarily disable rate limiting and
+# the concurrency cap, e.g. for before/after load-test comparisons:
+#   SAFEGUARDS_ENABLED=0 python restaurant-chatbot.py
+# Leave it enabled (default) for normal / production use.
+SAFEGUARDS_ENABLED = os.environ.get("SAFEGUARDS_ENABLED", "1") != "0"
+
+# 1) Per-IP rate limit: at most RATE_LIMIT_MAX requests per RATE_LIMIT_WINDOW
+#    seconds. Simple in-memory sliding window; fine for a single-process app.
+RATE_LIMIT_MAX = 10
+RATE_LIMIT_WINDOW = 60  # seconds
+_rate_limit_lock = threading.Lock()
+_request_log = defaultdict(deque)  # ip -> deque of request timestamps
+
+# 2) Global concurrency cap: at most this many requests may be waiting on the
+#    (slow) Ollama call at the same time. Extra requests get a 429 instead of
+#    piling up and starving the model / the Flask worker pool.
+MAX_CONCURRENT_REQUESTS = 4
+_concurrency_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT_REQUESTS)
+
+# 3) Hard cap on request body size (bytes) to stop oversized payloads from
+#    tying up memory/bandwidth.
+app.config["MAX_CONTENT_LENGTH"] = 64 * 1024  # 64 KB
+
+
+def client_ip():
+    """Best-effort client IP. Behind a reverse proxy, configure that proxy
+    to set X-Forwarded-For and trust only it; this simple version just uses
+    the direct connection."""
+    return request.remote_addr or "unknown"
+
+
+def is_rate_limited(ip):
+    now = time.monotonic()
+    with _rate_limit_lock:
+        log = _request_log[ip]
+        while log and now - log[0] > RATE_LIMIT_WINDOW:
+            log.popleft()
+        if len(log) >= RATE_LIMIT_MAX:
+            return True
+        log.append(now)
+        return False
 
 
 def load_restaurant_data():
@@ -68,8 +116,38 @@ def home():
     return render_template("restaurant_chatbot_site.html")
 
 
+@app.errorhandler(413)
+def request_too_large(e):
+    return jsonify({"error": "Request too large."}), 413
+
+
 @app.route("/chat", methods=["POST"])
 def chat():
+    if not SAFEGUARDS_ENABLED:
+        return handle_chat()
+
+    ip = client_ip()
+
+    if is_rate_limited(ip):
+        return jsonify({
+            "error": "Too many requests. Please slow down and try again shortly."
+        }), 429
+
+    # Don't block waiting for a free slot: if we're already at capacity,
+    # fail fast with 429 rather than queuing requests behind a slow model call.
+    acquired = _concurrency_semaphore.acquire(blocking=False)
+    if not acquired:
+        return jsonify({
+            "error": "The assistant is busy right now. Please try again in a moment."
+        }), 429
+
+    try:
+        return handle_chat()
+    finally:
+        _concurrency_semaphore.release()
+
+
+def handle_chat():
     data = request.get_json(silent=True)
 
     if not isinstance(data, dict):
@@ -163,8 +241,12 @@ def chat():
 
 if __name__ == "__main__":
     # Accessible only from this computer.
+    # threaded=True lets Flask's dev server handle multiple requests at once
+    # (needed for the concurrency cap above to do anything useful); for real
+    # deployments use a proper WSGI server (gunicorn/waitress) instead.
     app.run(
         host="127.0.0.1",
         port=5000,
-        debug=False
+        debug=False,
+        threaded=True
     )
